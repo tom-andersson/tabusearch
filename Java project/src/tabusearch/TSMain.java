@@ -6,16 +6,16 @@ import java.util.ArrayList;
 
 public class TSMain {
 	
-	// Main method
+	// Main method 
 	public static void main(String[] args) {
 		
-		SchwefelFunction schwef = new SchwefelFunction(2); // Create SchwefelFunction object of dim
+		Schwef.dim = 2; // Set the SchwefelFunction class static dimension variable
 		
 		ArrayList<Double> x = new ArrayList<Double>();
 		x.add(1.2);
 		x.add(-4.3);
 		
-		double funcval = schwef.f(x);
+		double funcval = Schwef.f(x);
 		
 		System.out.println("The Schwefel function value is: " + funcval);
 		

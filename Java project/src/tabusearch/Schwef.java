@@ -5,19 +5,16 @@ import java.util.ArrayList;
 
 // Class to evaluate the Schwefel Function of dimension N
 
-public class SchwefelFunction {
+public class Schwef {
 	
-	private int N; // Number of dimensions of the Schwefel function
+	public static int dim; // Number of dimensions of the Schwefel function
 	
-	public SchwefelFunction(int N) {
-		this.N = N;
-	} // Constructor to set the number of dimensions for the object
-	
-	public double f(ArrayList<Double> x) {
-		double funcval = 0.0;
-		int N = this.N;
+	// Method to evaluate and return the Schwefel function.
+	public static double f(ArrayList<Double> x) {
 		
-		if (x.size() == N) {
+		double funcval = 0.0;
+		
+		if (x.size() == dim) {
 			for (Double xi : x) {
 				funcval = funcval - xi*Math.sin(Math.sqrt(Math.abs(xi)));
 			}
@@ -28,6 +25,6 @@ public class SchwefelFunction {
 		}
 		
 		return funcval;
-	} // Method to evaluate and return the Schwefel function.
+	} 
 
 }
