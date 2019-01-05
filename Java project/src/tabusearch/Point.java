@@ -1,5 +1,7 @@
 package tabusearch;
 
+import java.util.Arrays;
+
 // Object storing an input location and its associated function value.
 // N.B. The Func.Schwef.dim field should be set before an object of this class can be created,
 // otherwise an error will occur.
@@ -17,6 +19,11 @@ public class Point implements Cloneable {
 
 	public Point() {
 		// Empty constructor
+	}
+	
+	// Return a string of the x array. Used for writing the Tabu path followed to a JSON file. 
+	public String getStringx() {
+		return Arrays.toString(x).replaceAll("\"","");
 	}
 
 	@Override

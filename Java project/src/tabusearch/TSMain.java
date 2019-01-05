@@ -1,13 +1,21 @@
 package tabusearch;
 
 import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+ 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 // Perform the Tabu Search algorithm on the Schwefel Function
 
 public class TSMain {
 
 	// Main method
-	public static void main(String[] args) throws CloneNotSupportedException {
+	public static void main(String[] args) throws CloneNotSupportedException, IOException {
 
 		// Using polymorphism to allow for the objective functions to be easily changed here
 		Function myFunc = new Schwef();
@@ -35,14 +43,21 @@ public class TSMain {
 		// Conduct local searches while the increment size is not below the limit (i.e. until convergence)
 		while (stepSize >= stepLimit) {
 			LocalSearch LSObj = new LocalSearch(stepSize,seed);
-			LinkedList<Point> localSearchHist = LSObj.doSearch();
+			LinkedList<Point> localSearchHist = LSObj.doSearch(); 
 			Tabu.globSearchHist.addAll(localSearchHist); // Append the local search history of points to the global search history
 			stepSize = stepSize/2; // Half the increment size
 			seed += 1; // Start from a new location
 		}
 		
-		// TODO: Output global search history list to a JSON and plot the coordinates in python
-		
+		// Save the search data to a .json file for analysis with Python
+		JSONObject jsonObj = new JSONObject();
+		List<String> tabuPath = Tabu.globSearchHist.stream().map(Point::getStringx).collect(Collectors.toList());
+		jsonObj.put("tabu_path", tabuPath);
+		String jsonFilename = "tabupath.json";
+		try (FileWriter file = new FileWriter("C:\\Users\\TomHP\\Desktop\\IIB\\Michaelmas\\4M17 Practical Optimisation\\CW2\\Repository\\json\\" + jsonFilename)) {
+			file.write(jsonObj.toJSONString());
+		}
+						
 		// PLAN:
 		// For now do not use intensification or diversification so that local search can be tested
 		
