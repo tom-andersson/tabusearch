@@ -1,6 +1,5 @@
 package tabusearch;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -8,82 +7,20 @@ import java.util.Random;
 // and static methods for performing typical processes of Tabu search.
 public class Tabu {
 	
-	// Nested class for the medium-term memory (MTM)
-	public static class MTM {
-		public double maxMTMVal; // Greatest function value in the MTM
-		public int maxMTMLoc; // Index into the MTM list of the greatest function value point
-		private final int M; // MTM size
-		private LinkedList<Point> mtmList; // LinkedList variable
-		
-		// Constructor to initialise the MTM array 
-		public MTM(int M) {
-			this.M = M;
-			mtmList = new LinkedList<Point>(); // Point the array variable at an empty ArrayList object
-		}
-		
-		public int getM() {
-			return this.M;
-		}
-		
-		// Update the greatest value in the MTM and its location
-		public void setMaxMTMPoint() {
-			if (mtmList.size() > 0) {
-				maxMTMVal = mtmList.getFirst().fval;
-				maxMTMLoc = 0;
-				for (int i = 1; i < mtmList.size(); i++) {
-					Point p = mtmList.get(i);
-					if (p.fval > maxMTMVal) {
-						maxMTMVal = p.fval;
-						maxMTMLoc = i;
-					}
-				}
-			}
-		}
-		
-		public void tryAddToMTM(Point currentPoint) throws CloneNotSupportedException {
-			// Only call this if the current value is lower than the greatest in the MTM
-			// Replace the corresponding Point in MTM with the currentPoint
-			if (currentPoint.fval < maxMTMVal) {
-				if (mtmList.size() < M) {
-					mtmList.addLast(currentPoint.clone());
-					setMaxMTMPoint();
-				} // "If the MTM list is not yet full"
-				else {
-					mtmList.remove(maxMTMLoc);
-					mtmList.addLast(currentPoint.clone());
-					setMaxMTMPoint();
-				} // Replace the point corresponding to the maximum value in the MTM with the 
-			}
-		}
-		
-		// Sum and average the coordinates of the locations in the MTM and return the corresponding Point object
-		public static Point findMTMAvg(MTM mtmObj) {
-			double[] avgLoc = new double[dim];
-			for (int i = 0; i < dim; i++) {
-				double avgSum = 0;
-				for (Point mtmEl : mtmObj.mtmList) {
-					avgSum += mtmEl.x[i];
-				}
-				avgLoc[i] = avgSum/mtmSize;
-			}	
-			
-			return new Point(avgLoc,Tabu.myFunc);
-		}
-	}
-	
+	public static boolean verbose; // True: print progress events of the search.
+	public static int num_evals = 0; // Counter for number of objective function evaluations
+	public static int eval_limit; // Convergence criterion on the number of objective function evaluations permitted
 	public static LinkedList<Point> globSearchHist; // Object to store the entire Tabu search history as a linked list.
 	public static Point globalMinPoint; // Current Point with the minimum associate objective function value
-	public static MTM mtmObj; // MTM object
 	public static Point startingPoint; // Force the local search to begin from this point
 	public static int dim; // Input dimension
 	public static double constraint; // Upper limit on variable magnitude
-	public static int stmSize; // Size of the short-term memory
-	public static int mtmSize; // Size of the medium-term memory
 	public static Function myFunc; // Function to minimise
 	public static double stepSize; // Starting step size for the Tabu local search
-	public static double stepLimit; 
+	public static double stepReduceFactor; // Constant factor to reduce the step size by after step-size reduction 
 	public static long seed; // Rng seed
-	
+	public static MTM mtmObj;
+	public static LTM ltmObj;
 	public static String searchType; // Type of local search to conduct: "initial", "intensify", "diversify" or "ssr"
 	public static int counter = 0; // Counter for number of iterations without improvement to minimum value found
 	public static int intensifyThresh; // Counter threshold to intensify search
@@ -97,53 +34,64 @@ public class Tabu {
 		}
 		else if (currentPoint.fval < globalMinPoint.fval) {
 			globalMinPoint = currentPoint.clone();
-		}
+		} 
 	}
 	
 	// Generate a random input point
-	private static Point genRandomPoint() {
+	public static Point genRandomPoint() {
 		Random gen = new Random(); // Unif[0,1) rng
 		double[] x = new double[dim];
 		for (int i = 0; i < x.length; i++) {
 			x[i] = gen.nextDouble() * (2*constraint) - constraint;
-		}
-		
-		// TODO: LTM logic
-		
-		return new Point(x, Tabu.myFunc);
+		} 
+
+		return new Point(x, myFunc);
 	}
 	
 	// Perform a complete Tabu search
 	public static void doTabuSearch() throws CloneNotSupportedException {
-		mtmObj = new Tabu.MTM(mtmSize);
+		mtmObj = new MTM();
+		ltmObj = new LTM();
 		counter = 0; 
 		searchType = "initialise";
-		System.out.println("Starting search");
+		System.out.print("Starting a Tabu search. ");
+		if (verbose == true) {
+			System.out.println("Printing counter evolution and other search events.");
+		}
+		
 		startingPoint = genRandomPoint(); 
 		
-		while (stepSize >= stepLimit) {
+		while (num_evals < eval_limit) {
+			if (searchType.equals("initialise") && verbose == true) {
+				System.out.print("\n");
+			}
+			
 			// Intensify search
 			if (searchType.equals("intensify")) {
 				startingPoint = MTM.findMTMAvg(mtmObj);
-				System.out.println("Intensiying search");
+				if (Tabu.verbose == true) {
+					System.out.print("\nIntensiying search: ");
+				}
 			} // Intensify: set starting point to the meant point of the MTM
 			
 			// Diversify search
-			else if (Tabu.searchType.equals("diversify")) {
-				startingPoint = genRandomPoint(); 
-				System.out.println("Diversifying search");
-			} // Diversify: generate a random point
+			else if (searchType.equals("diversify")) {
+				startingPoint = ltmObj.genDiversifiedPoint(); 
+			} // Diversify: generate a random point whose grid coordinates are not in the LTM
 			
 			// Reduce step size
 			else if (searchType.equals("ssr")) {
 				startingPoint = globalMinPoint; // Restart from the minimum point found so far
-				stepSize = stepSize*0.75; // Reduce the increment size
+				stepSize = stepSize*stepReduceFactor; // Reduce the increment size by a constant factor
 				counter = 0; // Reset counter
-				System.out.println("Reducing step size");
+				if (Tabu.verbose == true) {
+					System.out.print("\nReducing step size: ");
+				}
 			}
 			
+			// Perform a local search from startingPoint
 			LocalSearch LSObj = new LocalSearch(stepSize,seed);
-			LinkedList<Point> localSearchHist = LSObj.doLocalSearch(); 
+			LinkedList<Point> localSearchHist = LSObj.doLocalSearch(startingPoint); 
 			globSearchHist.addAll(localSearchHist); // Append the local search history of points to the global search history
 			
 			// TODO: change random generation

@@ -3,44 +3,35 @@ package tabusearch;
 import java.util.Arrays;
 import java.util.LinkedList;
 
-// Class with static fields and methods for performing a local search as part of Tabu Search.
+// Class for performing a local search as part of Tabu Search.
 
 public class LocalSearch {
 	
 	// Inner class for the short-term memory (STM)
-	private class STM {
-		private final int N; // STM size
-		private LinkedList<Point> stmList; // LinkedList variable
-		
-		// Constructor to initialise the STM array 
-		public STM(int N) {
-			this.N = N;
-			stmList = new LinkedList<Point>(); // Point the array variable at an empty ArrayList object
-		}
-		
-		@SuppressWarnings("unused")
-		public int getN() {
-			return this.N;
-		}
+	public static class STM {
+		public static int stmSize; // STM size
+		private LinkedList<Point> stmList = new LinkedList<Point>(); // LinkedList variable
 		
 		public void tryAddToSTM(Point currentPoint) throws CloneNotSupportedException {
 			// If the STM is not yet full
-			if (stmList.size() < N) { 
+			if (stmList.size() < stmSize) { 
 				stmList.add(currentPoint.clone()); // Add the current point to the STM
 			}
 			else {
-				stmList.offerFirst(currentPoint);
+				stmList.offerFirst(currentPoint.clone());
 				stmList.removeLast();
 			} // Replace with the current point in the STM on a first in, first out basis
 		}
 	}
 	
-	// Instance variables for this local search object
+	// Instance variables for a local search object
 	public double stepSize; // Step size 
 	public long seed; // Rng seed 
 	public LinkedList<Point> localSearchHist = new LinkedList<Point>(); // List to store entire history of points in the local search
+	STM stmObj = new STM(); 
 	private Point currentPoint; // Point object corresponding to the current position of the local search
 	private double localMinVal; // The current minimum function value for the local search
+	public static int stmSize; // Size of the short-term memory
 
 	// Constructor for creating a LocalSearch object
 	public LocalSearch(double stepSize, long seed) {
@@ -161,13 +152,13 @@ public class LocalSearch {
 	}
 	
 	// TODO: Explain what this method does
-	public LinkedList<Point> doLocalSearch() throws CloneNotSupportedException {
+	public LinkedList<Point> doLocalSearch(Point startingPoint) throws CloneNotSupportedException {
 				
 		// Initialisation
-		currentPoint = Tabu.startingPoint; // Generate the initial point
-		localSearchHist.add(currentPoint.clone()); // Add the initial point to the local search history
+		currentPoint = startingPoint.clone(); // Generate the initial point
+		storePoint(currentPoint,stmObj);
 		localMinVal = currentPoint.fval; // Initialise the minimum value found in the local search
-		STM stmObj = new STM(Tabu.stmSize);  
+		
 		LinkedList<double[]> testList = new LinkedList<double[]>(); // List of coordinates to check for validity
 		LinkedList<Point> validList = new LinkedList<Point>(); // List of points corresponding to valid Tabu moves 
 		int num_its = 0; // Total number of local search iterations
@@ -182,15 +173,18 @@ public class LocalSearch {
 		else {
 			counterThresh = Tabu.ssrThresh;
 		}
-		System.out.println("Counter is " + Tabu.counter + " and thresh is " + counterThresh);
 		
 		// Begin local search
 		while (Tabu.counter < counterThresh) {
-			System.out.print(Tabu.counter + " ");
+			if (Tabu.verbose == true) {
+				System.out.print(Tabu.counter + " ");
+			}
+			
 			double[] xBase = currentPoint.x.clone(); // Update the base point
-			updateTestList(testList,currentPoint,stepSize);	// Update testList by incrementing and decrementing each variable
-			updateValidList(testList,validList,stmObj);	// Update corresponding to valid non-tabu moves
+			updateTestList(testList,currentPoint,stepSize);	
+			updateValidList(testList,validList,stmObj);	
 			boolean functionReduced = makeBestAllowedMove(validList); // Make the best allowed move
+			
 			// If the objective function was reduced, attempt a pattern move
 			if (functionReduced == true) {
 				attemptPatternMove(xBase, currentPoint, stmObj);
@@ -207,16 +201,20 @@ public class LocalSearch {
 			}
 			
 			storePoint(currentPoint,stmObj);
-			num_its += 1;
 			
+			// If iteration number is a factor of 10, attempt to store current point in LTM
+			if (num_its % 10 == 0) {
+				Tabu.ltmObj.storeInLTM(currentPoint.x);
+			}
+			
+			num_its++;
+
 			if (num_its > 10000) {
 				System.out.println("Error: Excessive number of local search iterations reached without triggering counter threshold.");
 				System.exit(0);
 			}
 			
 		}
-		
-		System.out.println("Completed a local search with " + num_its + " iterations");
 		
 		if (Tabu.searchType.matches("initialise|ssr")) {
 			Tabu.searchType = "intensify";

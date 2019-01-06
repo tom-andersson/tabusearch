@@ -20,32 +20,34 @@ public class TSMain {
 		final int dim = 2; // Input dimension
 		myFunc.setDim(dim); // Set static dimension variable of the the SchwefelFunction class
 		
-		//TODO: don't bother having these as variables in main
-		
-		// Setting up the Tabu class
+		// Setting up the classes
 		Tabu.myFunc = myFunc;
 		Tabu.dim = dim;
 		// Algorithm parameters to be defined
+		Tabu.verbose = true; // True: print progress events of the search.
 		Tabu.seed = 100; // Rng seed
 		Tabu.globSearchHist = new LinkedList<Point>(); // Initialise global search history list 
 		Tabu.intensifyThresh = 10; // Counter limit to intensify search using MTM
 		Tabu.diversifyThresh = 15; // Counter limit to diversify search using long-term memory (LTM)
 		Tabu.ssrThresh = 25; // Counter limit to perform step-size reduction
-		Tabu.stepSize = 15; // Starting step size for the Tabu local search
-		Tabu.stepLimit = Tabu.stepSize/16; // Convergence criterion - stop when stepSize is smaller than stepLimit
-		Tabu.stmSize = 4; // Short-term memory (STM) size
-		Tabu.mtmSize = 4; // Medium-term memory (MTM) size
+		Tabu.stepSize = 25; // Starting step size for the Tabu local search
+		Tabu.stepReduceFactor = 0.75; // Constant factor to reduce stepSize by after step-size reduction
+		Tabu.eval_limit = 5000; // Convergence criterion - stop when num_evals reaches eval_limit
+		LocalSearch.STM.stmSize = 8; // Short-term memory (STM) size
+		MTM.mtmSize = 4; // Medium-term memory (MTM) size
 		Tabu.constraint = 500.0; // Upper limit on variable magnitude
+		LTM.setSegSize(10.0); // Long-term memory (LTM) segment size for grid
 		
 		// Perform a Tabu search
-		Tabu.doTabuSearch();
+		Tabu.doTabuSearch(); 
 
 		// Save the search data to a .json file for analysis with Python
+		System.out.println("\nSearch completed. Saving the path to a .json file.");
 		JSONObject jsonObj = new JSONObject();
 		List<String> tabuPath = Tabu.globSearchHist.stream().map(Point::getStringx).collect(Collectors.toList());
 		jsonObj.put("tabu_path", tabuPath);
 		String jsonFilename = "tabupath.json";
-		
+		System.out.println("Json file saved.");
 		String workingdir = System.getProperty("user.dir");
 		String parentdir = workingdir.substring(0,workingdir.lastIndexOf('\\'));
 		String jsondir = parentdir + "\\json\\";
@@ -70,13 +72,6 @@ public class TSMain {
 		// if MTM boolean is true, the counter limit is now set to diversify limit
 		// When diversify limit is reached set limit to REDUCE and sample from uncharted space
 		// When REDUCE is reached reduce step size and restart from best solution found so far
-		
-		// How to diversify: treat each element individually. make grid with segments of fixed size segSize
-		// Find 'segment coordinates' with round(coords/constraint * constraint/segSize). 'ban' each new segment
-		// by adding it to a set (?) of type int[]
-		// only do this check every 10 iterations for efficiency (unlikely to move into new region in 1 step)
-		// put this into generatePoint. have logic for if entire space has been banned. if generated point is in 
-		// set, reject it and generate another.
 
 		// Should I exit doSearch (the local search) when counter is reached and do search type logic outside of it? 
 		// probably yes because this makes a better hierarchy. on termination update the Tabu.searchType string. then
