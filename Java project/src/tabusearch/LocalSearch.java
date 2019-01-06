@@ -2,7 +2,6 @@ package tabusearch;
 
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.Random;
 
 // Class with static fields and methods for performing a local search as part of Tabu Search.
 
@@ -19,6 +18,7 @@ public class LocalSearch {
 			stmList = new LinkedList<Point>(); // Point the array variable at an empty ArrayList object
 		}
 		
+		@SuppressWarnings("unused")
 		public int getN() {
 			return this.N;
 		}
@@ -36,34 +36,16 @@ public class LocalSearch {
 	}
 	
 	// Instance variables for this local search object
-	public final double stepSize; // Step size 
-	public final long seed; // Rng seed 
+	public double stepSize; // Step size 
+	public long seed; // Rng seed 
 	public LinkedList<Point> localSearchHist = new LinkedList<Point>(); // List to store entire history of points in the local search
 	private Point currentPoint; // Point object corresponding to the current position of the local search
 	private double localMinVal; // The current minimum function value for the local search
-	// Static variables shared by all instances of this class (i.e. all separate local searches)
-	public static int dim; // Input dimension
-	public static int stmSize; // Size of the short-term memory
-	public static Function myFunc; // Function to minimise
-	public static double constraint; // Upper limit on variable magnitude
-	
+
 	// Constructor for creating a LocalSearch object
 	public LocalSearch(double stepSize, long seed) {
 		this.stepSize = stepSize;
 		this.seed = seed;
-	}
-	
-	// TODO: Move this to a static method of a new class with ability to diversify using LTM of grid sectors already visited 
-	// Generate a random input point
-	private Point genRandomPoint() {
-		Random gen = new Random(seed); // Unif[0,1) rng
-		double[] x = new double[dim];
-		for (int i = 0; i < x.length; i++) {
-			x[i] = gen.nextDouble() * (2*constraint) - constraint;
-		}
-		Point point = new Point(x, myFunc);
-		
-		return point;
 	}
 
 	// Generate a linked list of points around 'currentPoint' to test
@@ -92,7 +74,7 @@ public class LocalSearch {
 		for (double[] testEl : testList) {			
 			boolean validCheck1 = true; // Feasible region check
 			for (int i = 0; i < testEl.length; i++) {
-				if (Math.abs(testEl[i]) > constraint) {
+				if (Math.abs(testEl[i]) > Tabu.constraint) {
 					validCheck1 = false;
 				} // "If any of the variables violate the constraints"
 			}
@@ -107,7 +89,7 @@ public class LocalSearch {
 			}
 			
 			if (validCheck1==true && validCheck2==true) {
-				validList.add(new Point(testEl,myFunc));
+				validList.add(new Point(testEl,Tabu.myFunc));
 			}
 		}
 	}
@@ -150,7 +132,7 @@ public class LocalSearch {
 	
 
 	// Attempt a pattern move and execute it if it improves upon the minimum of the local search
-	private boolean attemptPatternMove(double[] xBase, Point currentPoint, STM stmObj) throws CloneNotSupportedException {
+	private void attemptPatternMove(double[] xBase, Point currentPoint, STM stmObj) throws CloneNotSupportedException {
 		double[] xCurrent = currentPoint.x;
 		double[] xPattern = new double[xCurrent.length];
 		
@@ -160,17 +142,13 @@ public class LocalSearch {
 		}
 		
 		// If the objective function is reduced, store the intermediate Tabu move retain the pattern move
-		double fPattern = myFunc.f(xPattern);
-		boolean didPattern = false;
+		double fPattern = Tabu.myFunc.f(xPattern);
 		if (fPattern < currentPoint.fval) {
 			storePoint(currentPoint, stmObj);
 			currentPoint = new Point();
 			currentPoint.x = xPattern.clone();
 			currentPoint.fval = fPattern;
-			didPattern = true;
 		}
-		
-		return didPattern;
 	}
 	
 	// Attempt to store a clone of the current Point object in the various memory objects
@@ -183,48 +161,72 @@ public class LocalSearch {
 	}
 	
 	// TODO: Explain what this method does
-	public LinkedList<Point> doSearch() throws CloneNotSupportedException {
-		
-		int counter = 0; // Number of iterations for which there has been no improvement on the minimum
-		
-		STM stmObj = new STM(stmSize);  
-		LinkedList<Point> stmList = stmObj.stmList;
-		
+	public LinkedList<Point> doLocalSearch() throws CloneNotSupportedException {
+				
 		// Initialisation
-		currentPoint = genRandomPoint(); // Generate the initial point
+		currentPoint = Tabu.startingPoint; // Generate the initial point
 		localSearchHist.add(currentPoint.clone()); // Add the initial point to the local search history
 		localMinVal = currentPoint.fval; // Initialise the minimum value found in the local search
-		LinkedList<double[]> testList = new LinkedList<double[]>(); // List of coordinates to check for being validity
+		STM stmObj = new STM(Tabu.stmSize);  
+		LinkedList<double[]> testList = new LinkedList<double[]>(); // List of coordinates to check for validity
 		LinkedList<Point> validList = new LinkedList<Point>(); // List of points corresponding to valid Tabu moves 
+		int num_its = 0; // Total number of local search iterations
+		int counterThresh; // Counter limit for this local search
+		
+		if (Tabu.searchType.matches("initialise|ssr")) {
+			counterThresh = Tabu.intensifyThresh;
+		}
+		else if (Tabu.searchType.equals("intensify")) {
+			counterThresh = Tabu.diversifyThresh;
+		}
+		else {
+			counterThresh = Tabu.ssrThresh;
+		}
+		System.out.println("Counter is " + Tabu.counter + " and thresh is " + counterThresh);
 		
 		// Begin local search
-		while (counter < 10) {
+		while (Tabu.counter < counterThresh) {
+			System.out.print(Tabu.counter + " ");
 			double[] xBase = currentPoint.x.clone(); // Update the base point
 			updateTestList(testList,currentPoint,stepSize);	// Update testList by incrementing and decrementing each variable
 			updateValidList(testList,validList,stmObj);	// Update corresponding to valid non-tabu moves
 			boolean functionReduced = makeBestAllowedMove(validList); // Make the best allowed move
 			// If the objective function was reduced, attempt a pattern move
 			if (functionReduced == true) {
-				boolean didPattern = attemptPatternMove(xBase, currentPoint, stmObj);
-				if (didPattern == true) {
-					// ?
-				}
-				// Reset the counter if a new local minimum value has been found
+				attemptPatternMove(xBase, currentPoint, stmObj);
 				if (currentPoint.fval < localMinVal) {
-					counter = 0; 
 					localMinVal = currentPoint.fval;
 				}
 			}
+			// Reset the counter if a new global minimum value has been found
+			if (currentPoint.fval < Tabu.globalMinPoint.fval) {
+				Tabu.counter = 0; 
+			}
 			else {
-				counter += 1; // Increment the counter
+				Tabu.counter += 1; // Increment the counter
 			}
 			
 			storePoint(currentPoint,stmObj);
+			num_its += 1;
+			
+			if (num_its > 10000) {
+				System.out.println("Error: Excessive number of local search iterations reached without triggering counter threshold.");
+				System.exit(0);
+			}
+			
 		}
 		
-		System.out.println("Local search terminated due to counter exceeding limit");
-
-		// TODO: Exit if total number of iterations becomes excessive
+		System.out.println("Completed a local search with " + num_its + " iterations");
+		
+		if (Tabu.searchType.matches("initialise|ssr")) {
+			Tabu.searchType = "intensify";
+		}
+		else if (Tabu.searchType.equals("intensify")) {
+			Tabu.searchType = "diversify";
+		}
+		else {
+			Tabu.searchType = "ssr";
+		}
 		
 		return localSearchHist;
 	}

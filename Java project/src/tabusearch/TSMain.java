@@ -1,13 +1,11 @@
 package tabusearch;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
- 
-import org.json.simple.JSONArray;
+
 import org.json.simple.JSONObject;
 
 // Perform the Tabu Search algorithm on the Schwefel Function
@@ -22,44 +20,43 @@ public class TSMain {
 		final int dim = 2; // Input dimension
 		myFunc.setDim(dim); // Set static dimension variable of the the SchwefelFunction class
 		
-		// Algorithm parameters to be defined
-		final double constraint = 500.0; // Upper limit on variable magnitude
-		final int N = 4; // Short-term memory (STM) size
-		final int M = 4; // Medium-term memory (MRM) size
-		double stepSize = 0.5; // Starting step size for the Tabu local search
-		final double stepLimit = stepSize/4; // Convergence criterion - stop when stepSize is smaller than stepLimit
-		long seed = 100; // Rng seed
+		//TODO: don't bother having these as variables in main
 		
 		// Setting up the Tabu class
-		Tabu.mtmObj = new Tabu.MTM(M);
+		Tabu.myFunc = myFunc;
+		Tabu.dim = dim;
+		// Algorithm parameters to be defined
+		Tabu.seed = 100; // Rng seed
 		Tabu.globSearchHist = new LinkedList<Point>(); // Initialise global search history list 
-
-		// Setting up the LocalSearch class
-		LocalSearch.stmSize = N;
-		LocalSearch.myFunc = myFunc;
-		LocalSearch.constraint = constraint;
-		LocalSearch.dim = dim;
-
-		// Conduct local searches while the increment size is not below the limit (i.e. until convergence)
-		while (stepSize >= stepLimit) {
-			LocalSearch LSObj = new LocalSearch(stepSize,seed);
-			LinkedList<Point> localSearchHist = LSObj.doSearch(); 
-			Tabu.globSearchHist.addAll(localSearchHist); // Append the local search history of points to the global search history
-			stepSize = stepSize/2; // Half the increment size
-			seed += 1; // Start from a new location
-		}
+		Tabu.intensifyThresh = 10; // Counter limit to intensify search using MTM
+		Tabu.diversifyThresh = 15; // Counter limit to diversify search using long-term memory (LTM)
+		Tabu.ssrThresh = 25; // Counter limit to perform step-size reduction
+		Tabu.stepSize = 15; // Starting step size for the Tabu local search
+		Tabu.stepLimit = Tabu.stepSize/16; // Convergence criterion - stop when stepSize is smaller than stepLimit
+		Tabu.stmSize = 4; // Short-term memory (STM) size
+		Tabu.mtmSize = 4; // Medium-term memory (MTM) size
+		Tabu.constraint = 500.0; // Upper limit on variable magnitude
 		
+		// Perform a Tabu search
+		Tabu.doTabuSearch();
+
 		// Save the search data to a .json file for analysis with Python
 		JSONObject jsonObj = new JSONObject();
 		List<String> tabuPath = Tabu.globSearchHist.stream().map(Point::getStringx).collect(Collectors.toList());
 		jsonObj.put("tabu_path", tabuPath);
 		String jsonFilename = "tabupath.json";
-		try (FileWriter file = new FileWriter("C:\\Users\\TomHP\\Desktop\\IIB\\Michaelmas\\4M17 Practical Optimisation\\CW2\\Repository\\json\\" + jsonFilename)) {
+		
+		String workingdir = System.getProperty("user.dir");
+		String parentdir = workingdir.substring(0,workingdir.lastIndexOf('\\'));
+		String jsondir = parentdir + "\\json\\";
+		
+		System.out.println(jsondir + jsonFilename);
+		
+		try (FileWriter file = new FileWriter(jsondir + jsonFilename)) {
 			file.write(jsonObj.toJSONString());
 		}
-						
+								
 		// PLAN:
-		// For now do not use intensification or diversification so that local search can be tested
 		
 		// Need to make counter, MTM and currentMin static variables of a new public class holding public search information
 		
@@ -73,7 +70,20 @@ public class TSMain {
 		// if MTM boolean is true, the counter limit is now set to diversify limit
 		// When diversify limit is reached set limit to REDUCE and sample from uncharted space
 		// When REDUCE is reached reduce step size and restart from best solution found so far
+		
+		// How to diversify: treat each element individually. make grid with segments of fixed size segSize
+		// Find 'segment coordinates' with round(coords/constraint * constraint/segSize). 'ban' each new segment
+		// by adding it to a set (?) of type int[]
+		// only do this check every 10 iterations for efficiency (unlikely to move into new region in 1 step)
+		// put this into generatePoint. have logic for if entire space has been banned. if generated point is in 
+		// set, reject it and generate another.
 
+		// Should I exit doSearch (the local search) when counter is reached and do search type logic outside of it? 
+		// probably yes because this makes a better hierarchy. on termination update the Tabu.searchType string. then
+		// make this the input of the next localSearch
+		// set string to 'initial' 
+		
+		// TODO: deal with seeds
 	}
 
 }
