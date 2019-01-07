@@ -62,15 +62,4 @@ public class LTM {
 		}
 		return p;
 	}
-
-	// How to diversify: treat each element individually. make grid with segments of
-	// fixed size segSize
-	// Find 'segment coordinates' with round(coords/constraint *
-	// constraint/segSize). 'ban' each new segment
-	// by adding it to a set (?) of type int[]
-	// only do this check every 10 iterations for efficiency (unlikely to move into
-	// new region in 1 step)
-	// put this into generatePoint. have logic for if entire space has been banned.
-	// if generated point is in
-	// set, reject it and generate another.
 }

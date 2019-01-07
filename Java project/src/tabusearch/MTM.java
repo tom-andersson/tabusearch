@@ -2,7 +2,8 @@ package tabusearch;
 
 import java.util.LinkedList;
 
-// Class for the medium-term memory (MTM) storing the 
+//Class for the medium-term memory (MTM) storing the 'mtmSize' Points with the least function
+//values visited so far 
 public class MTM {
 	
 	public static int mtmSize; // Size of the medium-term memory

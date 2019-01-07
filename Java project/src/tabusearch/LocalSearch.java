@@ -151,7 +151,8 @@ public class LocalSearch {
 		Tabu.checkGlobalMin(currentPoint);
 	}
 	
-	// TODO: Explain what this method does
+	// Perform a local search starting at startingPoint and ending when the counter threshold
+	// has been reached
 	public LinkedList<Point> doLocalSearch(Point startingPoint) throws CloneNotSupportedException {
 				
 		// Initialisation

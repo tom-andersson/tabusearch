@@ -63,7 +63,7 @@ public class Tabu {
 		
 		while (num_evals < eval_limit) {
 			if (searchType.equals("initialise") && verbose == true) {
-				System.out.print("\n");
+				System.out.print("\nInitial search: ");
 			}
 			
 			// Intensify search

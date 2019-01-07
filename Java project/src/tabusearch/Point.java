@@ -21,9 +21,14 @@ public class Point implements Cloneable {
 		// Empty constructor
 	}
 	
-	// Return a string of the x array. Used for writing the Tabu path followed to a JSON file. 
+	// Return a string of the x array
 	public String getStringx() {
-		return Arrays.toString(x).replaceAll("\"","");
+		return Arrays.toString(x);
+	}
+	
+	// Return a string of function value
+	public String getStringFval() {
+		return String.valueOf(fval);
 	}
 
 	@Override
