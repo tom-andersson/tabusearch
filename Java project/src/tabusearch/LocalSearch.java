@@ -26,7 +26,6 @@ public class LocalSearch {
 	
 	// Instance variables for a local search object
 	public double stepSize; // Step size 
-	public long seed; // Rng seed 
 	public LinkedList<Point> localSearchHist = new LinkedList<Point>(); // List to store entire history of points in the local search
 	STM stmObj = new STM(); 
 	private Point currentPoint; // Point object corresponding to the current position of the local search
@@ -34,9 +33,8 @@ public class LocalSearch {
 	public static int stmSize; // Size of the short-term memory
 
 	// Constructor for creating a LocalSearch object
-	public LocalSearch(double stepSize, long seed) {
+	public LocalSearch(double stepSize) {
 		this.stepSize = stepSize;
-		this.seed = seed;
 	}
 
 	// Generate a linked list of points around 'currentPoint' to test

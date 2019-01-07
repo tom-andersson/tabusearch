@@ -25,7 +25,7 @@ public class TSMain {
 		Tabu.dim = dim;
 		// Algorithm parameters to be defined
 		Tabu.verbose = true; // True: print progress events of the search.
-		Tabu.seed = 100; // Rng seed
+		Tabu.setGeneratorSeed(100); // Set the rng seed
 		Tabu.globSearchHist = new LinkedList<Point>(); // Initialise global search history list 
 		Tabu.intensifyThresh = 10; // Counter limit to intensify search using MTM
 		Tabu.diversifyThresh = 15; // Counter limit to diversify search using long-term memory (LTM)

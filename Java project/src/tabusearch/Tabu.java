@@ -18,7 +18,7 @@ public class Tabu {
 	public static Function myFunc; // Function to minimise
 	public static double stepSize; // Starting step size for the Tabu local search
 	public static double stepReduceFactor; // Constant factor to reduce the step size by after step-size reduction 
-	public static long seed; // Rng seed
+	public static Random generator; // Random generator
 	public static MTM mtmObj;
 	public static LTM ltmObj;
 	public static String searchType; // Type of local search to conduct: "initial", "intensify", "diversify" or "ssr"
@@ -26,6 +26,11 @@ public class Tabu {
 	public static int intensifyThresh; // Counter threshold to intensify search
 	public static int diversifyThresh; // Counter threshold to diversify search
 	public static int ssrThresh; // Counter threshold to perform step-size reduction
+	
+	// Set the seed of the random generator shared across classes
+	public static void setGeneratorSeed(long seed) {
+		generator = new Random(seed);
+	}
 	
 	// Check whether this point corresponds the best solution found so far and store it if so 
 	public static void checkGlobalMin(Point currentPoint) throws CloneNotSupportedException {
@@ -39,10 +44,9 @@ public class Tabu {
 	
 	// Generate a random input point
 	public static Point genRandomPoint() {
-		Random gen = new Random(); // Unif[0,1) rng
 		double[] x = new double[dim];
 		for (int i = 0; i < x.length; i++) {
-			x[i] = gen.nextDouble() * (2*constraint) - constraint;
+			x[i] = generator.nextDouble() * (2*constraint) - constraint;
 		} 
 
 		return new Point(x, myFunc);
@@ -90,12 +94,9 @@ public class Tabu {
 			}
 			
 			// Perform a local search from startingPoint
-			LocalSearch LSObj = new LocalSearch(stepSize,seed);
+			LocalSearch LSObj = new LocalSearch(stepSize); 
 			LinkedList<Point> localSearchHist = LSObj.doLocalSearch(startingPoint); 
 			globSearchHist.addAll(localSearchHist); // Append the local search history of points to the global search history
-			
-			// TODO: change random generation
-			seed += 10; // Start from a new location
 		}
 	}
 
