@@ -201,8 +201,9 @@ public class LocalSearch {
 			
 			storePoint(currentPoint,stmObj);
 			
-			// If iteration number is a factor of 10, attempt to store current point in LTM
-			if (num_its % 10 == 0) {
+			// Attempt to store current point in LTM after an integer number of iterations,
+			// where the integer is the number of Tabu steps that fit within each grid segment.
+			if (num_its % Math.ceil(LTM.getSegSize()/Tabu.stepSize) == 0) {
 				Tabu.ltmObj.storeInLTM(currentPoint.x);
 			}
 			

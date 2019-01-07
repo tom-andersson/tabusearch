@@ -25,7 +25,7 @@ public class TSMain {
 		Tabu.dim = dim;
 		// Algorithm parameters to be defined
 		Tabu.verbose = true; // True: print progress events of the search.
-		Tabu.setGeneratorSeed(100); // Set the rng seed
+		Tabu.setGeneratorSeed(40); // Set the rng seed
 		Tabu.globSearchHist = new LinkedList<Point>(); // Initialise global search history list 
 		Tabu.intensifyThresh = 10; // Counter limit to intensify search using MTM
 		Tabu.diversifyThresh = 15; // Counter limit to diversify search using long-term memory (LTM)
@@ -36,7 +36,7 @@ public class TSMain {
 		LocalSearch.STM.stmSize = 8; // Short-term memory (STM) size
 		MTM.mtmSize = 4; // Medium-term memory (MTM) size
 		Tabu.constraint = 500.0; // Upper limit on variable magnitude
-		LTM.setSegSize(100.0); // Long-term memory (LTM) segment size for grid
+		LTM.setSegSize(250.0); // Long-term memory (LTM) segment size for grid
 		
 		// Perform a Tabu search
 		Tabu.doTabuSearch(); 

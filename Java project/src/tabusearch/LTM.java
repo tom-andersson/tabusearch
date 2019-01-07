@@ -20,6 +20,10 @@ public class LTM {
 					"Warning: It is recommended that the constraint be divisible by the LTM grid segment size.");
 		}
 	}
+	
+	public static double getSegSize() {
+		return segSize;
+	}
 
 	// Convert current point into 'grid' coordinates and try to add it to the LTM set
 	public boolean storeInLTM(double[] currentPos) {

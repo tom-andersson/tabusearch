@@ -21,6 +21,7 @@ public class Tabu {
 	public static Random generator; // Random generator
 	public static MTM mtmObj;
 	public static LTM ltmObj;
+	public static int ltmUpdateRate; // Number of local search iterations between successive updates to the LTM
 	public static String searchType; // Type of local search to conduct: "initial", "intensify", "diversify" or "ssr"
 	public static int counter = 0; // Counter for number of iterations without improvement to minimum value found
 	public static int intensifyThresh; // Counter threshold to intensify search
@@ -54,13 +55,14 @@ public class Tabu {
 	
 	// Perform a complete Tabu search
 	public static void doTabuSearch() throws CloneNotSupportedException {
+		// Initialisation
 		mtmObj = new MTM();
 		ltmObj = new LTM();
 		counter = 0; 
+		ltmUpdateRate = (int) Math.ceil(LTM.getSegSize()/stepSize);
 		searchType = "initialise";
-		System.out.print("Starting a Tabu search. ");
 		if (verbose == true) {
-			System.out.println("Printing counter evolution and other search events.");
+			System.out.println("Starting a Tabu search. Printing counter evolution and other search events.");
 		}
 		
 		startingPoint = genRandomPoint(); 
@@ -88,10 +90,13 @@ public class Tabu {
 				startingPoint = globalMinPoint; // Restart from the minimum point found so far
 				stepSize = stepSize*stepReduceFactor; // Reduce the increment size by a constant factor
 				counter = 0; // Reset counter
+				ltmUpdateRate = (int) Math.ceil(LTM.getSegSize()/stepSize);
 				if (Tabu.verbose == true) {
 					System.out.print("\nReducing step size: ");
 				}
 			}
+			
+			
 			
 			// Perform a local search from startingPoint
 			LocalSearch LSObj = new LocalSearch(stepSize); 
