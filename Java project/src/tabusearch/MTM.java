@@ -29,17 +29,15 @@ public class MTM {
 	public void tryAddToMTM(Point currentPoint) throws CloneNotSupportedException {
 		// Only call this if the current value is lower than the greatest in the MTM
 		// Replace the corresponding Point in MTM with the currentPoint
-		if (currentPoint.fval < maxMTMVal) {
-			if (mtmList.size() < mtmSize) {
-				mtmList.addLast(currentPoint.clone());
-				setMaxMTMPoint();
-			} // "If the MTM list is not yet full"
-			else {
-				mtmList.remove(maxMTMLoc);
-				mtmList.addLast(currentPoint.clone());
-				setMaxMTMPoint();
-			} // Replace the point corresponding to the maximum value in the MTM with the current point
-		}
+		if (mtmList.size() < mtmSize) {
+			mtmList.addLast(currentPoint.clone());
+			setMaxMTMPoint();
+		} // "If the MTM list is not yet full, add the current point"
+		else if (currentPoint.fval < maxMTMVal) {
+			mtmList.remove(maxMTMLoc);
+			mtmList.addLast(currentPoint.clone());
+			setMaxMTMPoint();
+		} // If the MTM is full, replace the point corresponding to the maximum function value in the MTM with the current point
 	}
 
 	// Sum and average the coordinates of the locations in the MTM and return the

@@ -147,6 +147,7 @@ public class LocalSearch {
 		stmObj.tryAddToSTM(currentPoint);
 		Tabu.mtmObj.tryAddToMTM(currentPoint);
 		Tabu.checkGlobalMin(currentPoint);
+		Tabu.numEvalEvolution.add(Tabu.num_evals); // Record number of objective function evaluations
 	}
 	
 	// Perform a local search starting at startingPoint and ending when the counter threshold

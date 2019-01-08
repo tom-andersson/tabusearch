@@ -9,6 +9,7 @@ public class Tabu {
 	
 	public static boolean verbose; // True: print progress events of the search.
 	public static int num_evals = 0; // Counter for number of objective function evaluations
+	public static LinkedList<Integer> numEvalEvolution; // Evolution of the number of function evaluations
 	public static int eval_limit; // Convergence criterion on the number of objective function evaluations permitted
 	public static LinkedList<Point> globSearchHist; // Object to store the entire Tabu search history as a linked list.
 	public static Point globalMinPoint; // Current Point with the minimum associate objective function value
@@ -18,20 +19,16 @@ public class Tabu {
 	public static Function myFunc; // Function to minimise
 	public static double stepSize; // Starting step size for the Tabu local search
 	public static double stepReduceFactor; // Constant factor to reduce the step size by after step-size reduction 
-	public static Random generator; // Random generator
+	public static Random generator; // Random generator (shared across the package)
+	public static long seed; // Rng seed
 	public static MTM mtmObj;
 	public static LTM ltmObj;
-	public static int ltmUpdateRate; // Number of local search iterations between successive updates to the LTM
+	public static int ltmUpdateRate; // Local search iterations per update to the LTM
 	public static String searchType; // Type of local search to conduct: "initial", "intensify", "diversify" or "ssr"
 	public static int counter = 0; // Counter for number of iterations without improvement to minimum value found
 	public static int intensifyThresh; // Counter threshold to intensify search
 	public static int diversifyThresh; // Counter threshold to diversify search
 	public static int ssrThresh; // Counter threshold to perform step-size reduction
-	
-	// Set the seed of the random generator shared across classes
-	public static void setGeneratorSeed(long seed) {
-		generator = new Random(seed);
-	}
 	
 	// Check whether this point corresponds the best solution found so far and store it if so 
 	public static void checkGlobalMin(Point currentPoint) throws CloneNotSupportedException {
@@ -58,8 +55,10 @@ public class Tabu {
 		// Initialisation
 		mtmObj = new MTM();
 		ltmObj = new LTM();
+		numEvalEvolution = new LinkedList<Integer>();
+		generator = new Random(seed);
 		counter = 0; 
-		ltmUpdateRate = (int) Math.ceil(LTM.getSegSize()/stepSize);
+		ltmUpdateRate = (int) Math.ceil(LTM.getSegSize()/(2*stepSize));
 		searchType = "initialise";
 		if (verbose == true) {
 			System.out.println("Starting a Tabu search. Printing counter evolution and other search events.");
@@ -90,13 +89,11 @@ public class Tabu {
 				startingPoint = globalMinPoint; // Restart from the minimum point found so far
 				stepSize = stepSize*stepReduceFactor; // Reduce the increment size by a constant factor
 				counter = 0; // Reset counter
-				ltmUpdateRate = (int) Math.ceil(LTM.getSegSize()/stepSize);
+				ltmUpdateRate = (int) Math.ceil(LTM.getSegSize()/(2*stepSize));
 				if (Tabu.verbose == true) {
 					System.out.print("\nReducing step size: ");
 				}
 			}
-			
-			
 			
 			// Perform a local search from startingPoint
 			LocalSearch LSObj = new LocalSearch(stepSize); 

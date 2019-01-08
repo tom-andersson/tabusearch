@@ -25,7 +25,7 @@ public class TSMain {
 		Tabu.dim = dim;
 		// Algorithm parameters to be defined
 		Tabu.verbose = true; // True: print progress events of the search.
-		Tabu.setGeneratorSeed(40); // Set the rng seed
+		Tabu.seed = 40; // Set the rng seed
 		Tabu.globSearchHist = new LinkedList<Point>(); // Initialise global search history list 
 		Tabu.intensifyThresh = 10; // Counter limit to intensify search using MTM
 		Tabu.diversifyThresh = 15; // Counter limit to diversify search using long-term memory (LTM)
@@ -49,7 +49,8 @@ public class TSMain {
 		List<String> fEvolution = Tabu.globSearchHist.stream().map(Point::getStringFval).collect(Collectors.toList());
 		jsonObj.put("tabu_path", tabuPath);
 		jsonObj.put("f_evolution", fEvolution);
-		String jsonFilename = "PathAndFEvol.json";
+		jsonObj.put("num_eval_evolution", Tabu.numEvalEvolution);
+		String jsonFilename = "Seed" + String.valueOf(Tabu.seed) + "Data.json";
 		System.out.println("Json file saved.");
 		
 		String workingdir = System.getProperty("user.dir");

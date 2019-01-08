@@ -22,7 +22,7 @@ public class Schwef implements Function {
 	public double f(double[] x) {
 		Tabu.num_evals++; // Counter for the number of function evaluations
 
-		double funcval = 0.0;
+		double funcval = 418.9829*dim;
 
 		if (x.length == dim) {
 			for (Double xi : x) {
