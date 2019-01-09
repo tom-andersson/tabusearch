@@ -20,7 +20,7 @@ public class Schwef implements Function {
 
 	// Method to evaluate and return the Schwefel function (dim must be defined).
 	public double f(double[] x) {
-		Tabu.num_evals++; // Counter for the number of function evaluations
+		Tabu.numEvals++; // Counter for the number of function evaluations
 
 		double funcval = 418.9829*dim;
 

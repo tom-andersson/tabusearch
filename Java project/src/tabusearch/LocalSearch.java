@@ -26,10 +26,13 @@ public class LocalSearch {
 	
 	// Instance variables for a local search object
 	public double stepSize; // Step size 
-	public LinkedList<Point> localSearchHist = new LinkedList<Point>(); // List to store entire history of points in the local search
+	public static LinkedList<Point> localSearchHist; // List to store history of points in the local search
+	public static LinkedList<Double> localfEvolZeroHold; // Local history zero held with # of function evaluations
 	STM stmObj = new STM(); 
 	private Point currentPoint; // Point object corresponding to the current position of the local search
 	private double localMinVal; // The current minimum function value for the local search
+	int nEvalsLastIter; // Number of function evaluations during the previous iteration
+	int num_its = 0; // Total number of local search iterations
 	public static int stmSize; // Size of the short-term memory
 
 	// Constructor for creating a LocalSearch object
@@ -130,38 +133,64 @@ public class LocalSearch {
 			xPattern[i] = xCurrent[i] + (xCurrent[i] - xBase[i]);
 		}
 		
-		// If the objective function is reduced, store the intermediate Tabu move retain the pattern move
-		double fPattern = Tabu.myFunc.f(xPattern);
-		if (fPattern < currentPoint.fval) {
-			storePoint(currentPoint, stmObj);
-			currentPoint = new Point();
-			currentPoint.x = xPattern.clone();
-			currentPoint.fval = fPattern;
+		// Check whether the pattern move is still in the feasible region
+		boolean validCheck = true; // Feasible region check
+		for (int i = 0; i < xPattern.length; i++) {
+			if (Math.abs(xPattern[i]) > Tabu.constraint) {
+				validCheck = false;
+			}
+		}
+		
+		if (validCheck == true) {
+			// If the objective function is reduced, store the intermediate Tabu move and retain the pattern move
+			double fPattern = Tabu.myFunc.f(xPattern);
+			if (fPattern < currentPoint.fval) {
+				storePoint(currentPoint, stmObj);
+				currentPoint = new Point();
+				currentPoint.x = xPattern.clone();
+				currentPoint.fval = fPattern;
+			}
 		}
 	}
 	
 	// Attempt to store a clone of the current Point object in the various memory objects
 	private void storePoint(Point currentPoint, STM stmObj) throws CloneNotSupportedException {
+		Tabu.checkGlobalMin(currentPoint);
+
+		// Zero hold the function evolution by the number of evaluations since the last point was stored
+		nEvalsLastIter = Tabu.numEvals - Tabu.numEvalsLagged; 
+		for (int i = 0; i < nEvalsLastIter; i++) {
+			localfEvolZeroHold.add(currentPoint.fval); // Add the current point to the local search history
+			Tabu.globMinValZeroHold.add(Tabu.globalMinPoint.fval); // Add the current optimal solution
+		}
+		
 		localSearchHist.add(currentPoint.clone()); // Add the current point to the local search history
 		// See if the point should be stored in the STM, the MTM or the global minimum
 		stmObj.tryAddToSTM(currentPoint);
 		Tabu.mtmObj.tryAddToMTM(currentPoint);
-		Tabu.checkGlobalMin(currentPoint);
-		Tabu.numEvalEvolution.add(Tabu.num_evals); // Record number of objective function evaluations
+		// Attempt to store current point in LTM after an integer number of iterations,
+		// where the integer is the number of Tabu steps that fit within each grid segment.
+		if (num_its % Math.ceil(LTM.getSegSize()/Tabu.stepSize) == 0) {
+			Tabu.ltmObj.storeInLTM(currentPoint.x);
+		}
+		Tabu.numEvalEvolution.add(Tabu.numEvals); // Record number of objective function evaluations
+		
+		Tabu.numEvalsLagged = Tabu.numEvals; // Number of evaluations since previous stored point
 	}
 	
 	// Perform a local search starting at startingPoint and ending when the counter threshold
 	// has been reached
-	public LinkedList<Point> doLocalSearch(Point startingPoint) throws CloneNotSupportedException {
+	public void doLocalSearch(Point startingPoint) throws CloneNotSupportedException {
 				
 		// Initialisation
 		currentPoint = startingPoint.clone(); // Generate the initial point
+		localfEvolZeroHold = new LinkedList<Double>();
+		localSearchHist = new LinkedList<Point>();
 		storePoint(currentPoint,stmObj);
 		localMinVal = currentPoint.fval; // Initialise the minimum value found in the local search
 		
 		LinkedList<double[]> testList = new LinkedList<double[]>(); // List of coordinates to check for validity
 		LinkedList<Point> validList = new LinkedList<Point>(); // List of points corresponding to valid Tabu moves 
-		int num_its = 0; // Total number of local search iterations
 		int counterThresh; // Counter limit for this local search
 		
 		if (Tabu.searchType.matches("initialise|ssr")) {
@@ -177,13 +206,15 @@ public class LocalSearch {
 		// Begin local search
 		while (Tabu.counter < counterThresh) {
 			if (Tabu.verbose == true) {
-				System.out.print(Tabu.counter + " ");
+				//System.out.print(Tabu.counter + " ");
 			}
 			
 			double[] xBase = currentPoint.x.clone(); // Update the base point
 			updateTestList(testList,currentPoint,stepSize);	
 			updateValidList(testList,validList,stmObj);	
 			boolean functionReduced = makeBestAllowedMove(validList); // Make the best allowed move
+			
+			storePoint(currentPoint,stmObj);
 			
 			// If the objective function was reduced, attempt a pattern move
 			if (functionReduced == true) {
@@ -198,14 +229,6 @@ public class LocalSearch {
 			}
 			else {
 				Tabu.counter += 1; // Increment the counter
-			}
-			
-			storePoint(currentPoint,stmObj);
-			
-			// Attempt to store current point in LTM after an integer number of iterations,
-			// where the integer is the number of Tabu steps that fit within each grid segment.
-			if (num_its % Math.ceil(LTM.getSegSize()/Tabu.stepSize) == 0) {
-				Tabu.ltmObj.storeInLTM(currentPoint.x);
 			}
 			
 			num_its++;
@@ -226,7 +249,5 @@ public class LocalSearch {
 		else {
 			Tabu.searchType = "ssr";
 		}
-		
-		return localSearchHist;
 	}
 }

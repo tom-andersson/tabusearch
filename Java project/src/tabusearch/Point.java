@@ -32,10 +32,10 @@ public class Point implements Cloneable {
 	}
 
 	@Override
-	// This class only contains value type fields so shallow cloning produces independent copies
+	// Create and return a deep clone
 	protected Point clone() throws CloneNotSupportedException {
 		Point p = new Point();
-		p.x = this.x;
+		p.x = this.x.clone();
 		p.fval = this.fval;
 		return p;
 	}

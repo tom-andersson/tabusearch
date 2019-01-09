@@ -1,5 +1,6 @@
 package tabusearch;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -8,16 +9,20 @@ import java.util.Random;
 public class Tabu {
 	
 	public static boolean verbose; // True: print progress events of the search.
-	public static int num_evals = 0; // Counter for number of objective function evaluations
+	public static int numEvals = 0; // Counter for number of objective function evaluations
+	public static int numEvalsLagged = 0; // Number of function evaluations up to the previous Tabu iteration
 	public static LinkedList<Integer> numEvalEvolution; // Evolution of the number of function evaluations
 	public static int eval_limit; // Convergence criterion on the number of objective function evaluations permitted
-	public static LinkedList<Point> globSearchHist; // Object to store the entire Tabu search history as a linked list.
+	public static LinkedList<Point> globSearchHist; // Object to store the entire Tabu search history as a linked list
+	public static LinkedList<Double> globfEvolZeroHold; // History zero held with # of function evaluations
+	public static LinkedList<Double> globMinValZeroHold; // History of optimal solution found so far (zero held)
 	public static Point globalMinPoint; // Current Point with the minimum associate objective function value
 	public static Point startingPoint; // Force the local search to begin from this point
 	public static int dim; // Input dimension
 	public static double constraint; // Upper limit on variable magnitude
 	public static Function myFunc; // Function to minimise
 	public static double stepSize; // Starting step size for the Tabu local search
+	public static double stepLimit; // Lower limit on the step size
 	public static double stepReduceFactor; // Constant factor to reduce the step size by after step-size reduction 
 	public static Random generator; // Random generator (shared across the package)
 	public static long seed; // Rng seed
@@ -53,10 +58,14 @@ public class Tabu {
 	// Perform a complete Tabu search
 	public static void doTabuSearch() throws CloneNotSupportedException {
 		// Initialisation
+		globSearchHist = new LinkedList<Point>(); 
+		globfEvolZeroHold = new LinkedList<Double>();
+		globMinValZeroHold = new LinkedList<Double>();
 		mtmObj = new MTM();
 		ltmObj = new LTM();
 		numEvalEvolution = new LinkedList<Integer>();
 		generator = new Random(seed);
+		numEvals = 0;
 		counter = 0; 
 		ltmUpdateRate = (int) Math.ceil(LTM.getSegSize()/(2*stepSize));
 		searchType = "initialise";
@@ -66,7 +75,7 @@ public class Tabu {
 		
 		startingPoint = genRandomPoint(); 
 		
-		while (num_evals < eval_limit) {
+		while (numEvals < eval_limit) {
 			if (searchType.equals("initialise") && verbose == true) {
 				System.out.print("\nInitial search: ");
 			}
@@ -87,7 +96,10 @@ public class Tabu {
 			// Reduce step size
 			else if (searchType.equals("ssr")) {
 				startingPoint = globalMinPoint; // Restart from the minimum point found so far
-				stepSize = stepSize*stepReduceFactor; // Reduce the increment size by a constant factor
+				// If the step size limit will not be violated, reduce the step size
+				if (stepSize*stepReduceFactor > stepLimit) {
+					stepSize = stepSize*stepReduceFactor; // Reduce the increment size by a constant factor
+				}
 				counter = 0; // Reset counter
 				ltmUpdateRate = (int) Math.ceil(LTM.getSegSize()/(2*stepSize));
 				if (Tabu.verbose == true) {
@@ -97,8 +109,9 @@ public class Tabu {
 			
 			// Perform a local search from startingPoint
 			LocalSearch LSObj = new LocalSearch(stepSize); 
-			LinkedList<Point> localSearchHist = LSObj.doLocalSearch(startingPoint); 
-			globSearchHist.addAll(localSearchHist); // Append the local search history of points to the global search history
+			LSObj.doLocalSearch(startingPoint); 
+			globSearchHist.addAll(LocalSearch.localSearchHist); // Append the local search history of points to the global search history
+			globfEvolZeroHold.addAll(LocalSearch.localfEvolZeroHold); // Append zero held history
 		}
 	}
 

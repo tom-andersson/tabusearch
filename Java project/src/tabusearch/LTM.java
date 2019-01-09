@@ -42,7 +42,9 @@ public class LTM {
 		if (addingToLTM == true && ltmFull == false) {
 			if (ltmSet.size() == (int) Math.pow(2 * factor, Tabu.dim) && Tabu.constraint % segSize == 0) {
 				ltmFull = true;
-				System.out.println("(LTM set now full) ");
+				if (Tabu.verbose == true) {
+					System.out.println("(LTM set now full) ");
+				}
 			} // "If a grid point was added to the LTM and it is now full"
 		}
 
