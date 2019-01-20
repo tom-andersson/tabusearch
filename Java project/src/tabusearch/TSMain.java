@@ -28,13 +28,13 @@ public class TSMain {
 		// Default algorithm parameters to be defined (may be varied later in experiments)
 		Tabu.verbose = false; // True: print progress events of the search.
 		Tabu.seed = 50; // Set the rng seed
-		Tabu.intensifyThresh = 10; // Counter limit to intensify search using MTM
-		Tabu.diversifyThresh = 15; // Counter limit to diversify search using long-term memory (LTM)
-		Tabu.ssrThresh = 25; // Counter limit to perform step-size reduction
+		Tabu.intensifyThresh = 1; // Counter limit to intensify search using MTM
+		Tabu.diversifyThresh = 6; // Counter limit to diversify search using long-term memory (LTM)
+		Tabu.ssrThresh = 16; // Counter limit to perform step-size reduction
 		Tabu.startingStepSize = 175; // Starting step size for the Tabu local search
 		Tabu.stepLimit = 1E-13; // Lower limit on the step size (>1E-13 to prevent double precision issues)
 		Tabu.stepReduceFactor = 0.985; // Constant factor to reduce stepSize by after step-size reduction
-		Tabu.evalLimit = 10000; // Convergence criterion - stop when numEvals reaches evalLimit
+		Tabu.evalLimit = 20000; // Convergence criterion - stop when numEvals reaches evalLimit
 		Tabu.stmSize = 8; // Short-term memory (STM) size
 		MTM.mtmSize = 4; // Medium-term memory (MTM) size
 		Tabu.constraint = 500.0; // Upper limit on variable magnitude
@@ -46,12 +46,12 @@ public class TSMain {
 		// Choose whether to save the data
 		boolean saveData = true;
 		// Choose the filename of saveData = true
-		String jsonFilename = "counterthresholds.json"; 
+		String jsonFilename = "TSjson.json"; 
 		
 		// Choose which experiment to do
 		boolean doExperiment1 = false;
-		boolean doExperiment2 = false;
-		boolean doExperimetn3 = true;
+		boolean doExperiment2 = true;
+		boolean doExperimetn3 = false;
 		
 		JSONObject jsonObj = new JSONObject();
 		System.out.println("Starting experiment.");
@@ -70,7 +70,7 @@ public class TSMain {
 		// Store the (zero held) evolution of the function value and the minimum value found versus number of function evaluations
 		// for a number of different seeds (to be averaged in Python)
 		if (doExperiment2 == true) {
-			int nTabuRuns = 20; // Number of iterations to average over with different random seeds
+			int nTabuRuns = 25; // Number of iterations to average over with different random seeds
 			// Nested array of zero-held function evolutions
 			ArrayList<LinkedList<Double>> allZeroHeldHistories = new ArrayList<LinkedList<Double>>(nTabuRuns);
 			ArrayList<LinkedList<Double>> allZeroHeldMinVals = new ArrayList<LinkedList<Double>>(nTabuRuns);
@@ -86,7 +86,7 @@ public class TSMain {
 			jsonObj.put("all_zero_held_minvals", allZeroHeldMinVals); 
 		}
 		
-		// Vary a Tabu search parameter and store linked lists of the best objectives found over many random seeds
+		// Vary a Tabu search parameter and store lists of the best objectives found over many random seeds
 		// (to be averaged in Python)
 		if (doExperimetn3 == true) {
 			int nTabuRuns = 50; // Number of iterations to average over with different random seeds
