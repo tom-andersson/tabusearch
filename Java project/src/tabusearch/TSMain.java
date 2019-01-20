@@ -51,7 +51,7 @@ public class TSMain {
 		// Choose which experiment to do
 		boolean doExperiment1 = false;
 		boolean doExperiment2 = true;
-		boolean doExperimetn3 = false;
+		boolean doExperiment3 = false;
 		
 		JSONObject jsonObj = new JSONObject();
 		System.out.println("Starting experiment.");
@@ -88,7 +88,7 @@ public class TSMain {
 		
 		// Vary a Tabu search parameter and store lists of the best objectives found over many random seeds
 		// (to be averaged in Python)
-		if (doExperimetn3 == true) {
+		if (doExperiment3 == true) {
 			int nTabuRuns = 50; // Number of iterations to average over with different random seeds
 			ArrayList<ArrayList<Double>> bestSolutions = new ArrayList<ArrayList<Double>>(nTabuRuns);
 			ArrayList<Double> parameterValues = new ArrayList<Double>(nTabuRuns);
