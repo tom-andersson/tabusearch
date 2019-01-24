@@ -39,7 +39,7 @@ After running, the Tabu object stores the following data in `LinkedList` memory 
 * `globfEvolZeroHold`: Evolution of the objective value zero-held with the # of function evaluations
 * `globMinValZeroHold`: Evolution of the *best* objective value found in the search (also zero-held). The final element of this list is therefore the overall best objective value that the search could find.
 
-The Tabu object also stores `bestSolution` - `Point` object corresponding to the best solution. A simple but useful extension to `tabusearch` would be a user choice of what data to store in Tabu objects (efficiency boost when many runs are occurring).
+The Tabu object also stores `bestSolution` - a `Point` object corresponding to the best solution. A simple but useful extension to `tabusearch` would be a user choice of what data to store in Tabu objects, which would provide an efficiency boost when many runs are occurring and certain data need not be stored.
 
 # The Tabu Search algorithm
 
