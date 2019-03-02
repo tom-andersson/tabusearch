@@ -1,3 +1,7 @@
+# What is this?
+
+This is my implementation of Tabu Search: a gradient-free, stochastic global optimsation method which attempts to minimise a potentially multimodal objective function f(x) by taking discrete steps along the axis directions. I wrote this package as part of a coursework investigation for 4M17 Practical Optimisation (Cambridge University Engineering Department) during my Masters year. As part of the investigation, I explored the effect of algorithm parameters on the performance of Tabu Search and Simulated Annealing. I used the 5D Schwefel function as the objective function and compared the performance of the two optimisation methods after fine-tuning their parameters. I was awarded an A* (>75%) for my coursework report, which is included in this repository.
+
 # Quick `tabusearch` run-through
 
 Some examples with `tabusearch` are given in Java project/src/tabusearch/TSMain.java. The first task is to set up the static variables of the various classes to define the objective function and the algorithm parameters, for example:
@@ -43,7 +47,7 @@ The Tabu object also stores `bestSolution` - a `Point` object corresponding to t
 
 # The Tabu Search algorithm
 
-This is my implementation of Tabu Search: a gradient-free, stochastic global optimsation method which attempts to minimise a potentially multimodal objective function f(x) by taking discrete steps along the axis directions. I currently only have `tabusearch` set up to minimise the n-dimensional Schwefel function (shown below in its 2D form), but it can work with any function by extending the `Function` interface. The feasible region must be a hypercube centred on the origin.
+I currently only have `tabusearch` set up to minimise the n-dimensional Schwefel function (shown below in its 2D form), but it can work with any function by extending the `Function` interface (as in `Scwef.java`). The feasible region must be a hypercube centred on the origin.
 
 ![](figures/schwefel.jpg)
 
@@ -63,7 +67,7 @@ The search logic uses a counter for the number of iterations without improvement
 
 # Investigation
 
-I wrote this package as part of a coursework investigation for 4M17 Practical Optimisation (Cambridge University Engineering Department). As part of the investigation, I explored the effect of algorithm parameters on performance against the 5D Schwefel function, and compared it with another metaheuristic optimisation method (Simulated Annealing). For performance measures I used the mean and standard deviation of the best objective value found after 10,000 function evaluations over 50 runs with different random seeds. Some results from my report are shown below.
+For the investigation I used the mean and standard deviation of the best objective value found after 10,000 function evaluations over 50 runs (with different random seeds) as performance measures. Some results from my report are shown below.
 
 Effect of the step reduce factor on the performance measures for the 5D Schwefel function.
 
